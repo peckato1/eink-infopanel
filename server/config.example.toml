@@ -53,8 +53,8 @@
 # Forecast and the header's condition/sunrise/sunset are not read from here.
 # [victoriametrics]
 # url = "http://victoria.lan:8428"
-# temp_selector = 'ws90_temperature_celsius{id="15132"}'
-# rain_selector = "ws90_rain_m"
+# temp_selector = "meteo_temperature_celsius"
+# rain_selector = "meteo_rain_m"
 # window = "24h"          # lookback for the min/max/precip stats
 # cache_ttl_s = 900       # reuse a query result this long before re-querying
 # username = ""           # optional HTTP basic auth; omit if unauthenticated
@@ -62,10 +62,13 @@
 # Optional live "now" readings shown small in the header. Omit any to keep the
 # placeholder value. Each is read in its display unit: humidity in percent
 # (despite the metric's "_ratio" name), wind in m/s, direction in degrees.
-# humidity_selector = "ws90_humidity_ratio"
-# wind_selector     = "ws90_wind_avg_speed"
-# wind_dir_selector = "ws90_wind_dir_degrees"
-# light_selector    = "ws90_light_lux"
+# Selectors are full MetricsQL expressions, so aggregations like
+# avg(meteo_temperature_celsius) work when you have multiple stations.
+# humidity_selector  = "meteo_humidity_ratio"
+# wind_selector      = "meteo_wind_avg_speed"
+# wind_gust_selector = "meteo_wind_gust_speed"
+# wind_dir_selector  = "meteo_wind_dir_degrees"
+# light_selector     = "meteo_light_lux"
 
 # --- Telemetry (device monitoring) ------------------------------------------
 # Forward the firmware's per-wake telemetry (RSSI, free heap, battery voltage,

@@ -120,7 +120,8 @@ class LocationConfig:
 class VictoriaMetricsConfig:
     """Connection to a VictoriaMetrics (Prometheus HTTP API) for live weather.
 
-    ``temp_selector`` and ``rain_selector`` are MetricsQL series selectors (e.g. ``ws90_temperature_celsius{id="15132"}`` and ``ws90_rain_m``); the source derives the current temperature and the trailing min/max temperature and total precipitation from them over ``window``.
+    ``temp_selector`` and ``rain_selector`` are MetricsQL series selectors (e.g. ``meteo_temperature_celsius`` and ``meteo_rain_m``); the source derives the current temperature and the trailing min/max temperature and total precipitation from them over ``window``.
+    Full MetricsQL expressions are accepted, so ``avg(meteo_temperature_celsius)`` works for aggregating multiple stations.
     ``rain_selector`` is expected to be a rain accumulation in metres — it is converted to millimetres.
 
     Credentials are optional (HTTP basic auth); omit them for an unauthenticated instance.
