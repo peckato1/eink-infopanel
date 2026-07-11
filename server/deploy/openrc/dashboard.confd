@@ -1,0 +1,18 @@
+# Configuration for the "dashboard" OpenRC service.
+# Installed as /etc/conf.d/dashboard.
+
+# Absolute path to the checked-out server/ directory (contains wsgi.py and .venv).
+#server_dir="/opt/esp-dashboard/server"
+
+# System user/group the service runs as.
+#dashboard_user="dashboard"
+#dashboard_group="dashboard"
+
+# Address gunicorn binds to.
+#bind="0.0.0.0:8080"
+
+# Number of gunicorn worker processes.
+#workers="2"
+
+# Path to the dashboard config file (exported as DASHBOARD_CONFIG).
+#config_file="${server_dir}/config.toml"

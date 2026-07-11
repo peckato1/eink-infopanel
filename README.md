@@ -168,6 +168,34 @@ uv run gunicorn wsgi:app -b 0.0.0.0:8080
 
 Or point any WSGI server at the `app` object in `wsgi.py`.
 
+### OpenRC service
+
+`deploy/openrc/` ships an OpenRC init script that supervises gunicorn.
+It assumes the repository lives at `/opt/esp-dashboard` (adjust `server_dir` in the conf.d file otherwise).
+
+```sh
+# 1. Add gunicorn to the project venv (the service runs .venv/bin/gunicorn directly)
+cd /opt/esp-dashboard/server
+uv add gunicorn
+
+# 2. Create a dedicated system user that owns the checkout
+addgroup --system dashboard
+adduser  --system --no-create-home --ingroup dashboard dashboard
+chown -R dashboard:dashboard /opt/esp-dashboard
+
+# 3. Install the init script and its configuration
+install -m 0755 deploy/openrc/dashboard       /etc/init.d/dashboard
+install -m 0644 deploy/openrc/dashboard.confd /etc/conf.d/dashboard
+$EDITOR /etc/conf.d/dashboard    # set server_dir, bind, workers, user if the defaults don't fit
+
+# 4. Enable and start
+rc-update add dashboard default
+rc-service dashboard start
+```
+
+Logs go to `/var/log/dashboard.log`; check status with `rc-service dashboard status`.
+The service exports `DASHBOARD_CONFIG` pointing at `config_file` (default `server_dir/config.toml`), so the server finds its config regardless of the working directory.
+
 ## Grafana
 
 `grafana/esp-telemetry.json` is an importable dashboard for monitoring device health metrics forwarded via the telemetry endpoint.

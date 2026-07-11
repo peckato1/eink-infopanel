@@ -1,0 +1,38 @@
+#!/sbin/openrc-run
+# OpenRC service for the ESP e-paper dashboard server (gunicorn + wsgi:app).
+
+description="ESP e-paper dashboard server"
+
+: "${server_dir:=/opt/esp-dashboard/server}"
+: "${dashboard_user:=dashboard}"
+: "${dashboard_group:=dashboard}"
+: "${bind:=0.0.0.0:8080}"
+: "${workers:=2}"
+: "${gunicorn:=${server_dir}/.venv/bin/gunicorn}"
+: "${config_file:=${server_dir}/config.toml}"
+
+command="${gunicorn}"
+command_args="wsgi:app --bind ${bind} --workers ${workers}"
+command_user="${dashboard_user}:${dashboard_group}"
+directory="${server_dir}"
+pidfile="/run/${RC_SVCNAME}.pid"
+output_log="/var/log/${RC_SVCNAME}.log"
+error_log="/var/log/${RC_SVCNAME}.log"
+
+supervisor="supervise-daemon"
+
+export DASHBOARD_CONFIG="${config_file}"
+
+depend() {
+	need net
+	use dns logger
+}
+
+start_pre() {
+	if [ ! -x "${command}" ]; then
+		eerror "gunicorn not found at ${command}"
+		eerror "Install it into the project venv: cd ${server_dir} && uv add gunicorn"
+		return 1
+	fi
+	checkpath --directory --owner "${command_user}" --mode 0755 "$(dirname "${output_log}")"
+}
