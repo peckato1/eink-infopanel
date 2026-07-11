@@ -27,11 +27,12 @@ def draw(canvas: Canvas, weather: WeatherNow, now: datetime) -> None:
     date_str = l10n.format_date(now)
     day_w, day_h = text_size(d, day_name, fonts.xl)
     _, date_h = text_size(d, date_str, fonts.lg)
-    block_h = day_h + 4 + date_h
+    day_date_gap = 8
+    block_h = day_h + day_date_gap + date_h
     y0 = (HEADER_H - block_h) // 2
 
     d.text((PAD, y0), day_name, fill=WHITE, font=fonts.xl)
-    d.text((PAD, y0 + day_h + 4), date_str, fill=WHITE, font=fonts.lg)
+    d.text((PAD, y0 + day_h + day_date_gap), date_str, fill=WHITE, font=fonts.lg)
 
     x_right = W_PORTRAIT - PAD
     # Right cluster: big temperature over the small readings, flush right.
