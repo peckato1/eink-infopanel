@@ -38,6 +38,7 @@ _Live = tuple[dict[str, float], WeatherRecent]
 _NOW_SELECTORS = (
     ("humidity_selector", "humidity_pct", 1.0),
     ("wind_selector", "wind_ms", 1.0),
+    ("wind_gust_selector", "wind_gust_ms", 1.0),
     ("wind_dir_selector", "wind_dir_deg", 1.0),
     ("light_selector", "illuminance_lx", 1.0),
 )

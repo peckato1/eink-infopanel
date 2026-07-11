@@ -139,6 +139,7 @@ class VictoriaMetricsConfig:
     #: Each is read in its display unit (humidity in percent, wind in m/s, direction in degrees, light in lux).
     humidity_selector: str = ""
     wind_selector: str = ""
+    wind_gust_selector: str = ""
     wind_dir_selector: str = ""
     light_selector: str = ""
 
@@ -326,6 +327,7 @@ def _parse_victoriametrics(
         password=raw.get("password", defaults.password),
         humidity_selector=raw.get("humidity_selector", defaults.humidity_selector),
         wind_selector=raw.get("wind_selector", defaults.wind_selector),
+        wind_gust_selector=raw.get("wind_gust_selector", defaults.wind_gust_selector),
         wind_dir_selector=raw.get("wind_dir_selector", defaults.wind_dir_selector),
         light_selector=raw.get("light_selector", defaults.light_selector),
     )

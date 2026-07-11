@@ -23,6 +23,7 @@ class WeatherNow:
     sunset: str = "21:34"  # "HH:MM"
     humidity_pct: float = 58.0  # relative humidity, %
     wind_ms: float = 3.4  # wind speed, m/s
+    wind_gust_ms: float | None = None  # wind gust speed, m/s; None if not available
     wind_dir_deg: float = 225.0  # meteo. direction wind blows FROM (0=N, 90=E)
     illuminance_lx: float = 8200.0  # ambient light, lux
 

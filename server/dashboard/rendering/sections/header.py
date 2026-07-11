@@ -59,9 +59,14 @@ def draw(canvas: Canvas, weather: WeatherNow, now: datetime) -> None:
     # (meteo. direction is where it blows *from*, hence +180). PIL rotates
     # counter-clockwise but compass bearings run clockwise, hence the negation.
     wind_rot = -((weather.wind_dir_deg + 180) % 360)
+    wind_val = (
+        f"{weather.wind_ms * 3.6:.0f} / {weather.wind_gust_ms * 3.6:.0f} km/h"
+        if weather.wind_gust_ms is not None
+        else f"{weather.wind_ms * 3.6:.0f} km/h"
+    )
     segments = (
         ("droplet", f"{weather.humidity_pct:.0f}%", 0.0),
-        ("arrow-up", f"{weather.wind_ms * 3.6:.0f} km/h", wind_rot),
+        ("arrow-up", wind_val, wind_rot),
         ("sun-medium", _format_lux(weather.illuminance_lx), 0.0),
     )
     seg_w = [ic + ig + text_size(d, val, fonts.sm)[0] for _, val, _ in segments]
