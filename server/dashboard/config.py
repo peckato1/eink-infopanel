@@ -117,6 +117,20 @@ class LocationConfig:
 
 
 @dataclass(frozen=True)
+class ChmiConfig:
+    """CHMI meteogram API source for hourly NWP forecast.
+
+    ``station_id`` is the numeric CHMI station identifier (e.g. 204).
+    The API returns ~72 h of hourly ALADIN model output; ``hours`` controls
+    how far ahead the dashboard shows.
+    """
+
+    station_id: int
+    hours: int = 48
+    cache_ttl_s: int = 3600
+
+
+@dataclass(frozen=True)
 class VictoriaMetricsConfig:
     """Connection to a VictoriaMetrics (Prometheus HTTP API) for live weather.
 
@@ -185,6 +199,9 @@ class Settings:
     #: Panel location for computing sunrise/sunset, if configured.
     location: LocationConfig | None = None
 
+    #: CHMI meteogram forecast source, if configured.
+    forecast: ChmiConfig | None = None
+
     #: How far ahead to expand calendar events (including recurrences).
     calendar_window_days: int = 7
 
@@ -222,6 +239,7 @@ class Settings:
         victoriametrics = _parse_victoriametrics(data.get("victoriametrics"))
         telemetry = _parse_telemetry(data.get("telemetry"))
         location = _parse_location(data.get("location"))
+        forecast = _parse_chmi(data.get("forecast"))
         cal = data.get("calendar", {})
         wake = data.get("wake", {})
         server = data.get("server", {})
@@ -233,6 +251,7 @@ class Settings:
             victoriametrics=victoriametrics,
             telemetry=telemetry,
             location=location,
+            forecast=forecast,
             calendar_window_days=cal.get("window_days", defaults.calendar_window_days),
             calendar_cache_ttl_s=cal.get("cache_ttl_s", defaults.calendar_cache_ttl_s),
             refresh_interval_s=wake.get("interval_s", defaults.refresh_interval_s),
@@ -330,4 +349,21 @@ def _parse_victoriametrics(
         wind_gust_selector=raw.get("wind_gust_selector", defaults.wind_gust_selector),
         wind_dir_selector=raw.get("wind_dir_selector", defaults.wind_dir_selector),
         light_selector=raw.get("light_selector", defaults.light_selector),
+    )
+
+
+def _parse_chmi(
+    raw: Mapping[str, object] | None,
+) -> ChmiConfig | None:
+    """Build the CHMI forecast config from the ``forecast`` table.
+
+    Returns ``None`` when the section is absent, leaving the forecast at placeholder values.
+    """
+    if not raw:
+        return None
+    defaults = ChmiConfig(station_id=0)
+    return ChmiConfig(
+        station_id=int(raw["station_id"]),
+        hours=int(raw.get("hours", defaults.hours)),
+        cache_ttl_s=int(raw.get("cache_ttl_s", defaults.cache_ttl_s)),
     )

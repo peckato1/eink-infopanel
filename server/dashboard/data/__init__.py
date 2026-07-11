@@ -99,6 +99,11 @@ def default_source(settings: Settings) -> DataSource:
             cache_ttl_s=settings.victoriametrics.cache_ttl_s,
         )
 
+    if settings.forecast is not None:
+        from .chmi import ChmiWeatherSource
+
+        weather = ChmiWeatherSource(settings.forecast, inner=weather)
+
     if settings.location is not None:
         from .suntimes import SunTimesWeatherSource
 

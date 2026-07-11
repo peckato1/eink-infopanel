@@ -94,6 +94,16 @@
 # latitude = 50.08         # degrees north, negative for south
 # longitude = 14.44        # degrees east, negative for west
 
+# --- Forecast (CHMI meteogram) ----------------------------------------------
+# Hourly NWP forecast from the Czech Hydrometeorological Institute (ALADIN
+# model). Find your nearest station ID at:
+#   https://data-provider.chmi.cz/api/graphs/graf.meteogram/{station_id}
+# Omit this section to keep the placeholder forecast fixture.
+# [forecast]
+# station_id = 204         # numeric CHMI station identifier
+# hours = 48               # how far ahead to show (max ~72, default 48)
+# cache_ttl_s = 3600       # reuse a fetched forecast this long before re-fetching
+
 # --- Server -----------------------------------------------------------------
 # Settings for the built-in development server and the renderer. Omit this
 # section (or any key) to keep the defaults shown below.
