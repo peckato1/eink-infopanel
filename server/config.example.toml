@@ -1,0 +1,129 @@
+# Dashboard server configuration.
+#
+# Copy this file to `config.toml` (same directory) and fill in your secret ICS
+# feed URLs. `config.toml` is read at startup; a missing file is fine — the app
+# then falls back to placeholder data. Override the path with DASHBOARD_CONFIG.
+
+# --- Public ICS feeds -------------------------------------------------------
+# One table per ICS feed. `label` is the single character drawn in the calendar
+# badge (e.g. "W" work, "P" personal, "F" fitness); omit it for no badge.
+# [[calendars]]
+# label = "P"
+# url = "https://calendar.google.com/calendar/ical/…/basic.ics"
+
+# --- CalDAV (read-only) -----------------------------------------------------
+# A private CalDAV account — nothing is made public. For Fastmail, create an
+# app password (Settings → Privacy & Security → App passwords, calendar access)
+# and use it below. Omit this whole section to disable CalDAV.
+#
+# Use the array-of-tables form `[[caldav]]` and repeat the block to pull from
+# several accounts; their events are merged. (A single `[caldav]` table is also
+# accepted for one account.)
+# [[caldav]]
+# url = "https://caldav.fastmail.com/"
+# username = "you@fastmail.com"
+# password = "app-password"
+#
+# List the calendars to include and their badges. Omit `[[caldav.calendars]]`
+# entirely to include every calendar on the account with no badge.
+# [[caldav.calendars]]
+# name = "Personal"   # must match the calendar's name on the server
+# label = "P"
+# [[caldav.calendars]]
+# name = "Work"
+# label = "W"
+#
+# A second account, merged with the first:
+# [[caldav]]
+# url = "https://caldav.example.com/"
+# username = "you@example.com"
+# password = "app-password"
+# [[caldav.calendars]]
+# name = "Family"
+# label = "R"
+
+# --- VictoriaMetrics (live weather) -----------------------------------------
+# Pull the current temperature and the trailing 24h min/max temperature and
+# total precipitation from a VictoriaMetrics instance (Prometheus HTTP API).
+# Omit this section to keep the placeholder weather fixture.
+#
+# `temp_selector` and `rain_selector` are MetricsQL series selectors. The rain
+# series is expected to be a monotonic lifetime accumulation in metres; the
+# window's total is its value now minus its oldest value in `window`, in mm.
+# Forecast and the header's condition/sunrise/sunset are not read from here.
+# [victoriametrics]
+# url = "http://victoria.lan:8428"
+# temp_selector = 'ws90_temperature_celsius{id="15132"}'
+# rain_selector = "ws90_rain_m"
+# window = "24h"          # lookback for the min/max/precip stats
+# cache_ttl_s = 900       # reuse a query result this long before re-querying
+# username = ""           # optional HTTP basic auth; omit if unauthenticated
+# password = ""
+# Optional live "now" readings shown small in the header. Omit any to keep the
+# placeholder value. Each is read in its display unit: humidity in percent
+# (despite the metric's "_ratio" name), wind in m/s, direction in degrees.
+# humidity_selector = "ws90_humidity_ratio"
+# wind_selector     = "ws90_wind_avg_speed"
+# wind_dir_selector = "ws90_wind_dir_degrees"
+# light_selector    = "ws90_light_lux"
+
+# --- Telemetry (device monitoring) ------------------------------------------
+# Forward the firmware's per-wake telemetry (RSSI, free heap, battery voltage,
+# render outcome, wake reason) to VictoriaMetrics as gauges, so the panel can be
+# monitored and alerted on. Omit this section to only log the reports.
+#
+# Exported series (all labelled device="…"): esp_rssi_dbm, esp_free_heap_bytes,
+# esp_battery_volts, esp_render_ok, esp_wake_info{reason="…"},
+# esp_sleep_interval_seconds (the granted sleep, i.e. when the next check-in is
+# due — lets you flag genuinely missed updates), and esp_last_seen_seconds
+# (handy for a "device went silent" alert). Typically the same VictoriaMetrics
+# instance as [victoriametrics] above.
+# [telemetry]
+# url = "http://victoria.lan:8428"
+# device = "dashboard"    # value of the `device` label on every series
+# username = ""           # optional HTTP basic auth; omit if unauthenticated
+# password = ""
+
+# --- Location (sunrise/sunset) ----------------------------------------------
+# Sunrise and sunset are computed locally from the panel's coordinates (no
+# network call). Omit this section to keep the placeholder sun times.
+# [location]
+# latitude = 50.08         # degrees north, negative for south
+# longitude = 14.44        # degrees east, negative for west
+
+# --- Server -----------------------------------------------------------------
+# Settings for the built-in development server and the renderer. Omit this
+# section (or any key) to keep the defaults shown below.
+[server]
+host = "0.0.0.0"
+port = 8080
+# TrueType fonts used by the renderer.
+font_bold = "/usr/share/fonts/TTF/DejaVuSans-Bold.ttf"
+font_regular = "/usr/share/fonts/TTF/DejaVuSans.ttf"
+
+[calendar]
+# How far ahead to expand events, including recurrences.
+window_days = 7
+# How long a fetched feed is reused before re-fetching (applies to ICS + CalDAV).
+cache_ttl_s = 900
+
+# --- Wake-up policy ---------------------------------------------------------
+# How the server tells the firmware when to next wake (X-Next-Wakeup header).
+# Omit this section to keep the defaults shown below.
+[wake]
+# Base interval between wake-ups during the day, in seconds.
+interval_s = 1800
+# Align wake-ups to the interval grid from local midnight (:00/:30 for 1800 s)
+# instead of drifting. Also flips the day layout promptly just after midnight.
+align = true
+# Quiet hours: inside this window the device sleeps straight through to
+# `quiet_end` (morning) instead of refreshing. Leave both empty to disable.
+# The window may wrap past midnight. Needs firmware MAX_SLEEP_SECONDS >= the gap.
+quiet_start = "23:00"
+quiet_end = "06:00"
+
+[logging]
+# Root log level. Set to "DEBUG" to trace which CalDAV calendars the server
+# offers, which ones matched the configured filter, and how many events each
+# yielded — handy when a calendar's events aren't showing up.
+level = "INFO"

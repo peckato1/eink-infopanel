@@ -1,0 +1,12 @@
+.pio
+.claude
+.venv
+__pycache__
+*.pyc
+.ruff_cache
+
+compile_commands.json
+.clangd
+
+esp-controller/src/secrets.h
+server/config.toml

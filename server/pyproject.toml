@@ -1,0 +1,22 @@
+[project]
+name = "esp-dashboard-server"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.0",
+    "pillow>=10.0",
+    "requests>=2.31",
+    "astral>=3.2",
+    "icalendar>=7.0",
+    "recurring-ical-events>=3.0",
+    "caldav>=3.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
