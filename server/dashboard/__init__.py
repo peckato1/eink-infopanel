@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import logging
 
-from flask import Flask
+from flask import Flask, request
 
 from . import api
 from .config import Settings
@@ -49,4 +49,11 @@ def create_app(
     app.extensions["telemetry"] = sink_for(settings.telemetry)
 
     app.register_blueprint(api.bp)
+
+    @app.after_request
+    def _log_request(response):
+        """Log one INFO line per handled request, transport-independent."""
+        app.logger.info("%s %s → %s", request.method, request.path, response.status_code)
+        return response
+
     return app
