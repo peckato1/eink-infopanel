@@ -4,7 +4,9 @@ over labelled precipitation bars."""
 from __future__ import annotations
 
 import math
+from datetime import timedelta
 
+from ...data.chmi import icon_to_lucide
 from ...models import ForecastPoint
 from .. import l10n
 from ..canvas import Canvas
@@ -33,7 +35,7 @@ def draw(canvas: Canvas, forecast: list[ForecastPoint]) -> None:
     plot_x0 = PAD + axis_w  # 50
     plot_x1 = W_PORTRAIT - PAD - right_axis_w  # 590
     graph_top = FORECAST_Y + 40  # 140
-    axis_row_h = 28
+    axis_row_h = 48  # icons (20) + gap (2) + hour labels (~12) + margin
     graph_bot = FORECAST_Y + FORECAST_H - axis_row_h  # 372
     precip_h = 56
     precip_top = graph_bot - precip_h  # 316
@@ -149,8 +151,24 @@ def draw(canvas: Canvas, forecast: list[ForecastPoint]) -> None:
         cx, cy = pts[0]
         d.ellipse([cx - 2, cy - 2, cx + 2, cy + 2], fill=RED)
 
+    # --- Weather icons every 6h above the time axis ------------------------
+    # Icon is drawn at the 6h tick but represents the midpoint (+3h) of each
+    # 6h window, which better matches what weather services show for each period.
+    icon_size = 20
+    icon_y = graph_bot + 4
+    by_time = {p.time: p for p in forecast}
+    for i, p in enumerate(forecast):
+        if p.time.hour % 6 != 0:
+            continue
+        mid = by_time.get(p.time + timedelta(hours=3), p)
+        if mid.icon_code is None:
+            continue
+        lucide = icon_to_lucide(mid.icon_code)
+        img = canvas.icons.get(lucide, icon_size, BLACK)
+        canvas.image.paste(img, (int(x_at(i)) - icon_size // 2, icon_y), img)
+
     # --- Time axis: day names at midnight, hour ticks otherwise ------------
-    ty = graph_bot + 5
+    ty = graph_bot + 4 + icon_size + 2
     for i, p in enumerate(forecast):
         if p.time.hour == 0:
             label = l10n.DAYS_SHORT[p.time.weekday()]

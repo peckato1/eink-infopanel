@@ -19,6 +19,7 @@ class WeatherNow:
 
     temp_c: float = 24.0
     condition: str = "Partly cloudy"
+    icon: str = ""  # Lucide icon name; empty means fall back to condition string
     sunrise: str = "05:12"  # "HH:MM"
     sunset: str = "21:34"  # "HH:MM"
     humidity_pct: float = 58.0  # relative humidity, %
@@ -47,6 +48,7 @@ class ForecastPoint:
     icon: "Image | None" = None  # ready-made weather icon; not drawn yet
     wind_ms: float | None = None  # wind speed (m/s)
     wind_dir_deg: float | None = None  # meteo. direction wind blows FROM (0=N, 90=E)
+    icon_code: int | None = None  # provider-specific icon code (e.g. CHMI meteogram)
 
 
 @dataclass

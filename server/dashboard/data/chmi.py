@@ -12,9 +12,32 @@ from datetime import datetime, timedelta
 
 import requests
 
+from dataclasses import replace
+
 from ..config import ChmiConfig
 from ..models import ForecastPoint, WeatherNow, WeatherRecent
 from . import WeatherSource
+
+# CHMI meteogram icon code → Lucide icon name.
+# Tens = sky condition; units = precipitation type (0=dry, 1=drizzle, 2=rain,
+# 3=freezing rain, 4=sleet, 5=snow, 6=hail, 9=thunderstorm).
+# Day bases: 10 clear, 20 mostly clear, 40 partly cloudy, 60 mostly cloudy,
+#            70 very cloudy, 80 overcast, 90 fog
+# Night bases (moon): 110, 120, 140, 160, 170
+_DAY_BASE = {10: "sun", 20: "cloud-sun", 40: "cloud-sun", 60: "cloudy", 70: "cloud", 80: "cloud", 90: "cloud-fog"}
+_NIGHT_BASE = {110: "moon", 120: "cloud-moon", 140: "cloud-moon", 160: "cloudy", 170: "cloud"}
+_PRECIP_DAY = {1: "cloud-drizzle", 2: "cloud-rain", 3: "cloud-rain", 4: "cloud-hail", 5: "cloud-snow", 6: "cloud-hail", 9: "cloud-lightning"}
+_PRECIP_NIGHT = {1: "cloud-moon-rain", 2: "cloud-moon-rain", 3: "cloud-moon-rain", 4: "cloud-snow", 5: "cloud-snow", 6: "cloud-hail", 9: "cloud-lightning"}
+
+
+def icon_to_lucide(code: int) -> str:
+    """Map a CHMI icon code to a Lucide icon name."""
+    base, precip = (code // 10) * 10, code % 10
+    if base in _NIGHT_BASE:
+        return _NIGHT_BASE[base] if precip == 0 else _PRECIP_NIGHT.get(precip, _NIGHT_BASE[base])
+    if base in _DAY_BASE:
+        return _DAY_BASE[base] if precip == 0 else _PRECIP_DAY.get(precip, _DAY_BASE[base])
+    return "cloud-sun"
 
 log = logging.getLogger(__name__)
 
@@ -40,7 +63,10 @@ class ChmiWeatherSource:
         self, now: datetime
     ) -> tuple[WeatherNow, WeatherRecent, list[ForecastPoint]]:
         base_now, recent, _ = self._inner.weather(now)
-        return base_now, recent, self._get_forecast(now)
+        forecast = self._get_forecast(now)
+        now_icon = _current_icon(forecast, now)
+        weather_now = replace(base_now, icon=now_icon) if now_icon else base_now
+        return weather_now, recent, forecast
 
     def _get_forecast(self, now: datetime) -> list[ForecastPoint]:
         cached = self._cache
@@ -95,6 +121,7 @@ def _parse(data: dict) -> list[ForecastPoint]:
         dt = datetime.fromisoformat(entry["validityTime"]).astimezone()
         wind = entry.get("windSpeed")
         wdir = entry.get("windDirection")
+        raw_icon = entry.get("icon")
         points.append(
             ForecastPoint(
                 time=dt,
@@ -102,6 +129,19 @@ def _parse(data: dict) -> list[ForecastPoint]:
                 precip_mm=float(entry.get("prec") or 0.0),
                 wind_ms=float(wind) if wind is not None else None,
                 wind_dir_deg=float(wdir) if wdir is not None else None,
+                icon_code=int(raw_icon) if raw_icon is not None else None,
             )
         )
     return points
+
+
+def _current_icon(forecast: list[ForecastPoint], now: datetime) -> str:
+    """Return the Lucide icon name for the hour closest to now, or empty string."""
+    now_utc = now.astimezone()
+    current = next(
+        (p for p in reversed(forecast) if p.time.astimezone() <= now_utc),
+        forecast[0] if forecast else None,
+    )
+    if current is None or current.icon_code is None:
+        return ""
+    return icon_to_lucide(current.icon_code)

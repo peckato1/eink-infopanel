@@ -28,6 +28,7 @@ _CONDITION_ICONS = {
 _FALLBACK_ICON = "cloud-sun"
 
 
+
 class IconSet:
     """Loads, caches and tints Lucide icon masters on demand."""
 
@@ -62,3 +63,4 @@ class IconSet:
     def for_condition(condition: str) -> str:
         """Map a weather condition string to a Lucide icon name."""
         return _CONDITION_ICONS.get(condition.strip().lower(), _FALLBACK_ICON)
+

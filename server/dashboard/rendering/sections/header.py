@@ -44,7 +44,8 @@ def draw(canvas: Canvas, weather: WeatherNow, now: datetime) -> None:
     cond_size = 48
     gap = 14
     widget_x = x_right - (cond_size + gap + temp_w)
-    cond = icons.get(icons.for_condition(weather.condition), cond_size, WHITE)
+    icon_name = weather.icon or icons.for_condition(weather.condition)
+    cond = icons.get(icon_name, cond_size, WHITE)
     image.paste(cond, (widget_x, temp_cy - cond_size // 2), cond)
     d.text(
         (widget_x + cond_size + gap, temp_cy),
