@@ -5,7 +5,7 @@ These are produced by a :class:`dashboard.data.DataSource` and are deliberately 
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
@@ -52,6 +52,16 @@ class ForecastPoint:
 
 
 @dataclass
+class DailyForecastPoint:
+    """One day of the multi-day outlook strip shown below the meteogram."""
+
+    day: date  # the calendar day this cell represents
+    temp_min_c: float  # daily minimum temperature °C
+    temp_max_c: float  # daily maximum temperature °C
+    icon: str = ""  # Lucide icon name; empty means draw no icon
+
+
+@dataclass
 class CalendarEvent:
     """One upcoming calendar entry."""
 
@@ -71,3 +81,4 @@ class DashboardData:
     recent: WeatherRecent
     events: list[CalendarEvent]
     forecast: list[ForecastPoint]
+    daily: list[DailyForecastPoint] = field(default_factory=list)

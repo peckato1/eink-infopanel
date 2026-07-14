@@ -43,6 +43,7 @@ class Renderer:
 
         sections.header.draw(canvas, data.weather, data.now)
         sections.forecast.draw(canvas, data.forecast)
+        sections.daily.draw(canvas, data.daily)
         sections.summary.draw(canvas, data.recent)
         sections.calendar.draw(canvas, data.events, data.now)
         sections.footer.draw(canvas, data.now)

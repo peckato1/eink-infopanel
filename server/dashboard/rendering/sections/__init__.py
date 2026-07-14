@@ -2,6 +2,6 @@
 
 from __future__ import annotations
 
-from . import calendar, footer, forecast, header, summary
+from . import calendar, daily, footer, forecast, header, summary
 
-__all__ = ["header", "forecast", "summary", "calendar", "footer"]
+__all__ = ["header", "forecast", "daily", "summary", "calendar", "footer"]

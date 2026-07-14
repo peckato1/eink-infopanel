@@ -22,10 +22,13 @@ WHITE = (255, 255, 255)
 # --- Vertical layout (y coordinates, top to bottom) -------------------------
 HEADER_H = 100
 
-FORECAST_Y = HEADER_H  # 100
-FORECAST_H = 300
+FORECAST_Y = HEADER_H  # 100 — hourly meteogram
+FORECAST_H = 268
 
-SUMMARY_Y = FORECAST_Y + FORECAST_H  # 400 — last-24h stats strip
+DAILY_Y = FORECAST_Y + FORECAST_H  # 368 — multi-day outlook strip
+DAILY_H = 78
+
+SUMMARY_Y = DAILY_Y + DAILY_H  # 446 — last-24h stats strip
 SUMMARY_H = 50
 
 DIVIDER_Y = SUMMARY_Y + SUMMARY_H  # 436

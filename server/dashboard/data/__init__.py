@@ -17,6 +17,7 @@ from typing import Protocol
 from ..config import Settings
 from ..models import (
     CalendarEvent,
+    DailyForecastPoint,
     DashboardData,
     ForecastPoint,
     WeatherNow,
@@ -43,6 +44,14 @@ class CalendarSource(Protocol):
         ...
 
 
+class DailyForecastSource(Protocol):
+    """Produces the multi-day outlook strip for a given moment."""
+
+    def daily(self, now: datetime) -> list[DailyForecastPoint]:
+        """Return the daily outlook to show, as of ``now``."""
+        ...
+
+
 class DataSource(Protocol):
     """Produces the current dashboard state for a given moment."""
 
@@ -52,11 +61,17 @@ class DataSource(Protocol):
 
 
 class CompositeSource:
-    """A :class:`DataSource` assembled from a weather and a calendar source."""
+    """A :class:`DataSource` assembled from a weather, calendar and daily source."""
 
-    def __init__(self, weather: WeatherSource, calendar: CalendarSource) -> None:
+    def __init__(
+        self,
+        weather: WeatherSource,
+        calendar: CalendarSource,
+        daily: DailyForecastSource,
+    ) -> None:
         self._weather = weather
         self._calendar = calendar
+        self._daily = daily
 
     def fetch(self, now: datetime) -> DashboardData:
         weather, recent, forecast = self._weather.weather(now)
@@ -66,6 +81,7 @@ class CompositeSource:
             recent=recent,
             events=self._calendar.events(now),
             forecast=forecast,
+            daily=self._daily.daily(now),
         )
 
 
@@ -109,6 +125,15 @@ def default_source(settings: Settings) -> DataSource:
 
         weather = SunTimesWeatherSource(settings.location, inner=weather)
 
+    daily: DailyForecastSource = placeholder
+    if settings.forecast is not None and settings.forecast.daily_days > 0:
+        from .chmi_daily import ChmiDailyForecastSource
+
+        daily = ChmiDailyForecastSource(
+            days=settings.forecast.daily_days,
+            cache_ttl_s=settings.forecast.cache_ttl_s,
+        )
+
     calendars: list[CalendarSource] = []
     if settings.calendars:
         from .ical import IcalCalendarSource
@@ -133,18 +158,19 @@ def default_source(settings: Settings) -> DataSource:
             )
 
     if not calendars:
-        # No live calendars: only build a composite if the weather half is live.
-        if weather is placeholder:
+        # No live calendars: only build a composite if a live half exists.
+        if weather is placeholder and daily is placeholder:
             return placeholder
-        return CompositeSource(weather=weather, calendar=placeholder)
+        return CompositeSource(weather=weather, calendar=placeholder, daily=daily)
 
     calendar = calendars[0] if len(calendars) == 1 else MergedCalendarSource(calendars)
-    return CompositeSource(weather=weather, calendar=calendar)
+    return CompositeSource(weather=weather, calendar=calendar, daily=daily)
 
 
 __all__ = [
     "CalendarSource",
     "CompositeSource",
+    "DailyForecastSource",
     "DataSource",
     "MergedCalendarSource",
     "PlaceholderSource",

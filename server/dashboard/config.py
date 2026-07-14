@@ -122,12 +122,17 @@ class ChmiConfig:
 
     ``station_id`` is the numeric CHMI station identifier (e.g. 204).
     The API returns ~72 h of hourly ALADIN model output; ``hours`` controls
-    how far ahead the dashboard shows.
+    how far ahead the meteogram shows.
+
+    ``daily_days`` controls the multi-day outlook strip below the meteogram,
+    fetched from CHMI's national daily forecast endpoint (which needs no station
+    id). It starts tomorrow; set it to ``0`` to hide the strip.
     """
 
     station_id: int
     hours: int = 48
     cache_ttl_s: int = 3600
+    daily_days: int = 7
 
 
 @dataclass(frozen=True)
@@ -366,4 +371,5 @@ def _parse_chmi(
         station_id=int(raw["station_id"]),
         hours=int(raw.get("hours", defaults.hours)),
         cache_ttl_s=int(raw.get("cache_ttl_s", defaults.cache_ttl_s)),
+        daily_days=int(raw.get("daily_days", defaults.daily_days)),
     )

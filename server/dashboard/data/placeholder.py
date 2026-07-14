@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 
 from ..models import (
     CalendarEvent,
+    DailyForecastPoint,
     DashboardData,
     ForecastPoint,
     WeatherNow,
@@ -31,6 +32,17 @@ _EVENTS: list[tuple[int, str, str, str]] = [
     (2, "14:00", "Design review", "W"),
     (3, "", "Public holiday", ""),
     (3, "11:00", "Lunch with client", "W"),
+]
+
+# Hand-made week outlook: (min °C, max °C, Lucide icon) per day from tomorrow.
+_DAILY: list[tuple[float, float, str]] = [
+    (14.0, 24.0, "cloud-sun"),
+    (15.0, 26.0, "sun"),
+    (16.0, 27.0, "sun"),
+    (16.0, 23.0, "cloud-rain"),
+    (13.0, 21.0, "cloud-rain"),
+    (12.0, 22.0, "cloudy"),
+    (13.0, 25.0, "cloud-sun"),
 ]
 
 # Hand-made 48h dummy series, indexed by hour offset from the current full hour.
@@ -250,6 +262,7 @@ class PlaceholderSource:
             recent=_RECENT,
             events=self.events(now),
             forecast=self.forecast(now),
+            daily=self.daily(now),
         )
 
     def weather(
@@ -262,6 +275,18 @@ class PlaceholderSource:
 
     def forecast(self, now: datetime) -> list[ForecastPoint]:
         return self._forecast(now)
+
+    def daily(self, now: datetime) -> list[DailyForecastPoint]:
+        today = now.date()
+        return [
+            DailyForecastPoint(
+                day=today + timedelta(days=offset + 1),
+                temp_min_c=tmin,
+                temp_max_c=tmax,
+                icon=icon,
+            )
+            for offset, (tmin, tmax, icon) in enumerate(_DAILY)
+        ]
 
     @staticmethod
     def _events(now: datetime) -> list[CalendarEvent]:

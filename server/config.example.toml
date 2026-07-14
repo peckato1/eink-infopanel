@@ -103,6 +103,8 @@
 # station_id = 204         # numeric CHMI station identifier
 # hours = 48               # how far ahead to show (max ~72, default 48)
 # cache_ttl_s = 3600       # reuse a fetched forecast this long before re-fetching
+# daily_days = 7           # days in the outlook strip below the graph; 0 hides it
+#                          # (national CHMI daily forecast; starts tomorrow)
 
 # --- Server -----------------------------------------------------------------
 # Settings for the built-in development server and the renderer. Omit this
