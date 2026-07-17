@@ -10,3 +10,4 @@ compile_commands.json
 
 esp-controller/src/secrets.h
 server/config.toml
+server/icon_mapping.html
