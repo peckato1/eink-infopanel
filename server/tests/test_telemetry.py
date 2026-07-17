@@ -29,6 +29,7 @@ SAMPLE = {
     "wake": "timer",
     "vbat": 3.94,
     "sleep": 1800,
+    "retries": 2,
 }
 
 
@@ -39,6 +40,7 @@ def test_render_covers_all_fields():
     assert 'esp_free_heap_bytes{device="panel"} 110328' in lines
     assert 'esp_battery_volts{device="panel"} 3.94' in lines
     assert 'esp_sleep_interval_seconds{device="panel"} 1800' in lines
+    assert 'esp_fetch_retries{device="panel"} 2' in lines
     assert 'esp_render_ok{device="panel"} 1' in lines
     assert 'esp_wake_info{device="panel",reason="timer"} 1' in lines
     assert 'esp_last_seen_seconds{device="panel"} 1783692000' in lines

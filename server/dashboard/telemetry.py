@@ -28,6 +28,7 @@ _GAUGES = (
     ("heap", "esp_free_heap_bytes"),
     ("vbat", "esp_battery_volts"),
     ("sleep", "esp_sleep_interval_seconds"),
+    ("retries", "esp_fetch_retries"),
 )
 
 

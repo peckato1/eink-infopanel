@@ -230,11 +230,12 @@ const char* wakeReason()
 
 /** @brief Best-effort telemetry: POST JSON, short timeout, result ignored.
  *  @param sleepSeconds the sleep about to be taken — the interval until the next
- *         expected check-in, so the server can flag genuinely missed updates. */
-void postTelemetry(bool renderOk, uint32_t sleepSeconds)
+ *         expected check-in, so the server can flag genuinely missed updates.
+ *  @param retries number of extra fetch attempts beyond the first (0 = clean fetch). */
+void postTelemetry(bool renderOk, uint32_t sleepSeconds, int retries)
 {
     char body[224];
-    int len = snprintf(body, sizeof(body), "{\"rssi\":%d,\"heap\":%u,\"render_ok\":%s,\"wake\":\"%s\",\"sleep\":%u", WiFi.RSSI(), (unsigned)ESP.getFreeHeap(), renderOk ? "true" : "false", wakeReason(), (unsigned)sleepSeconds);
+    int len = snprintf(body, sizeof(body), "{\"rssi\":%d,\"heap\":%u,\"render_ok\":%s,\"wake\":\"%s\",\"sleep\":%u,\"retries\":%d", WiFi.RSSI(), (unsigned)ESP.getFreeHeap(), renderOk ? "true" : "false", wakeReason(), (unsigned)sleepSeconds, retries);
 
     float vbat = readBattery();
     if (!isnan(vbat)) {
@@ -292,15 +293,22 @@ void setup()
         goToSleep(DEFAULT_SLEEP_SECONDS);
     }
 
-    // Fetch image + next wakeup from response headers.
+    // Fetch image + next wakeup from response headers. A fetch can fail on a
+    // transient network hiccup or a short stream, so retry a couple of times
+    // before giving up (up to 3 attempts total).
     FrameResult frame = fetchFrame();
+    int retries = 0;
+    for (; !frame.imageOk && retries < 2; retries++) {
+        Serial.printf("Fetch failed, retry %d/2...\n", retries + 1);
+        frame = fetchFrame();
+    }
 
     // Render guarded so its outcome never blocks the sleep path.
     bool renderOk = renderFrame(frame);
     Serial.println(renderOk ? "Rendered." : "Fetch/render failed, display unchanged.");
 
     uint32_t sleepSecs = frame.haveSleep ? frame.sleepSeconds : DEFAULT_SLEEP_SECONDS;
-    postTelemetry(renderOk, sleepSecs);
+    postTelemetry(renderOk, sleepSecs, retries);
     goToSleep(sleepSecs);
 }
 
