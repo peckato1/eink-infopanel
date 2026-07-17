@@ -27,27 +27,24 @@ _USER_AGENT = "esp-epaper-dashboard/1.0 (+chmi)"
 def _daily_icon(weather: int | None, weather_icon: int | None) -> str:
     """Pick a Lucide icon for a day.
 
-    Significant weather is taken from the WMO ``weather`` (ww) code, which is
-    well-defined; for a dry day the sky/cloud baseline is reused from the
-    meteogram icon mapping.
+    Prefer the meteogram icon code, which encodes both sky cover and
+    precipitation (so a partly-cloudy rainy day keeps its sun). Fall back to the
+    WMO ``weather`` (ww) code only when no icon is given.
     """
-    if weather is not None:
-        if weather >= 95:  # thunderstorm
-            return "cloud-lightning"
-        if weather in (85, 86):  # snow showers
-            return "cloud-snow"
-        if 80 <= weather <= 82:  # rain showers
-            return "cloud-rain"
-        if 71 <= weather <= 77:  # snow
-            return "cloud-snow"
-        if 61 <= weather <= 67:  # rain / freezing rain
-            return "cloud-rain"
-        if 51 <= weather <= 57:  # drizzle
-            return "cloud-drizzle"
-        if 45 <= weather <= 48:  # fog
-            return "cloud-fog"
     if weather_icon is not None:
         return icon_to_lucide(weather_icon)
+    if weather is None:
+        return ""
+    if weather >= 95:  # thunderstorm
+        return "cloud-lightning"
+    if 71 <= weather <= 77 or weather in (85, 86):  # snow (incl. showers)
+        return "cloud-snow"
+    if 61 <= weather <= 67 or 80 <= weather <= 82:  # rain (incl. showers)
+        return "cloud-rain"
+    if 51 <= weather <= 57:  # drizzle
+        return "cloud-drizzle"
+    if 45 <= weather <= 48:  # fog
+        return "cloud-fog"
     return ""
 
 

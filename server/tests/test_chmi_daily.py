@@ -55,17 +55,18 @@ def test_parse_skips_incomplete_days():
     assert _parse(partial) == []
 
 
-def test_icon_thunderstorm_from_weather_code():
-    assert _daily_icon(95, 66) == "cloud-lightning"
-
-
-def test_icon_rain_showers_from_weather_code():
-    assert _daily_icon(80, 61) == "cloud-rain"
-
-
-def test_icon_dry_day_falls_back_to_sky_mapping():
-    # No significant weather (code 0) → reuse the meteogram icon mapping.
+def test_icon_prefers_meteogram_icon():
+    # The icon carries sky cover, so rain on a partly-cloudy day keeps its sun,
+    # even when the WMO code (80 = rain showers) alone would say "cloud-rain".
+    assert _daily_icon(80, 41) == "cloud-sun-rain"
+    assert _daily_icon(80, 61) == "cloud-sun-rain"
     assert _daily_icon(0, 40) == "cloud-sun"
+
+
+def test_icon_wmo_fallback_when_no_icon():
+    assert _daily_icon(95, None) == "cloud-lightning"
+    assert _daily_icon(80, None) == "cloud-rain"
+    assert _daily_icon(None, None) == ""
 
 
 if __name__ == "__main__":
