@@ -18,26 +18,53 @@ from ..config import ChmiConfig
 from ..models import ForecastPoint, WeatherNow, WeatherRecent
 from . import WeatherSource
 
-# CHMI meteogram icon code → Lucide icon name.
-# Tens = sky condition; units = precipitation type (0=dry, 1=drizzle, 2=rain,
-# 3=freezing rain, 4=sleet, 5=snow, 6=hail, 9=thunderstorm).
-# Day bases: 10 clear, 20 mostly clear, 40 partly cloudy, 60 mostly cloudy,
-#            70 very cloudy, 80 overcast, 90 fog
-# Night bases (moon): 110, 120, 140, 160, 170
-_DAY_BASE = {10: "sun", 20: "cloud-sun", 40: "cloud-sun", 60: "cloudy", 70: "cloud", 80: "cloud", 90: "cloud-fog"}
-_NIGHT_BASE = {110: "moon", 120: "cloud-moon", 140: "cloud-moon", 160: "cloudy", 170: "cloud"}
-_PRECIP_DAY = {1: "cloud-drizzle", 2: "cloud-rain", 3: "cloud-rain", 4: "cloud-hail", 5: "cloud-snow", 6: "cloud-hail", 9: "cloud-lightning"}
-_PRECIP_NIGHT = {1: "cloud-moon-rain", 2: "cloud-moon-rain", 3: "cloud-moon-rain", 4: "cloud-snow", 5: "cloud-snow", 6: "cloud-hail", 9: "cloud-lightning"}
+# CHMI meteogram icon code → Lucide icon name, mapped explicitly per code.
+#
+# The code is not cleanly decomposable: the tens digit is the sky state (10
+# clear … 80 overcast, 90 fog; +100 for the night/moon variants) but the units
+# digit's meaning shifts between bases — e.g. on base 40 a "3" is snow, while on
+# base 60 it is sleet. Rather than special-case that, every real code is listed.
+# Codes were read off the CHMI icon set at
+# https://www.chmi.cz/o/chmu-theme/images/icon/<code>.svg
+#
+# Lucide keeps the sun/moon only for its rain variants — it has none for snow or
+# thunder, so those drop the sun/moon; sleet folds into snow (no mixed icon), and
+# thunder-with-hail (…9) folds into plain thunder.
+_ICON_MAP = {
+    # --- day: dry ---
+    10: "sun", 20: "cloud-sun", 40: "cloud-sun", 60: "cloud-sun", 70: "cloud-sun",
+    80: "cloud", 90: "cloud-fog",
+    # --- day: rain (sun kept where the sky shows it) ---
+    41: "cloud-sun-rain", 61: "cloud-sun-rain", 62: "cloud-sun-rain",
+    71: "cloud-sun-rain", 72: "cloud-sun-rain",
+    81: "cloud-rain", 82: "cloud-rain", 91: "cloud-rain", 92: "cloud-rain",
+    # --- day: snow / sleet ---
+    43: "cloud-snow", 45: "cloud-snow", 63: "cloud-snow", 64: "cloud-snow",
+    65: "cloud-snow", 73: "cloud-snow", 74: "cloud-snow", 75: "cloud-snow",
+    83: "cloud-snow", 84: "cloud-snow", 85: "cloud-snow", 93: "cloud-snow",
+    94: "cloud-snow",
+    # --- day: thunderstorm (incl. with hail) ---
+    46: "cloud-lightning", 66: "cloud-lightning", 69: "cloud-lightning",
+    76: "cloud-lightning", 79: "cloud-lightning", 86: "cloud-lightning",
+    89: "cloud-lightning",
+    # --- night: dry ---
+    110: "moon", 120: "cloud-moon", 140: "cloud-moon", 160: "cloud-moon",
+    170: "cloud-moon",
+    # --- night: rain ---
+    141: "cloud-moon-rain", 161: "cloud-moon-rain", 162: "cloud-moon-rain",
+    171: "cloud-moon-rain", 172: "cloud-moon-rain",
+    # --- night: snow / sleet ---
+    143: "cloud-snow", 145: "cloud-snow", 163: "cloud-snow", 164: "cloud-snow",
+    165: "cloud-snow", 173: "cloud-snow", 174: "cloud-snow", 175: "cloud-snow",
+    # --- night: thunderstorm (incl. with hail) ---
+    146: "cloud-lightning", 166: "cloud-lightning", 169: "cloud-lightning",
+    176: "cloud-lightning", 179: "cloud-lightning",
+}
 
 
 def icon_to_lucide(code: int) -> str:
-    """Map a CHMI icon code to a Lucide icon name."""
-    base, precip = (code // 10) * 10, code % 10
-    if base in _NIGHT_BASE:
-        return _NIGHT_BASE[base] if precip == 0 else _PRECIP_NIGHT.get(precip, _NIGHT_BASE[base])
-    if base in _DAY_BASE:
-        return _DAY_BASE[base] if precip == 0 else _PRECIP_DAY.get(precip, _DAY_BASE[base])
-    return "cloud-sun"
+    """Map a CHMI meteogram icon code to a Lucide icon name."""
+    return _ICON_MAP.get(code, "cloud-sun")
 
 log = logging.getLogger(__name__)
 
